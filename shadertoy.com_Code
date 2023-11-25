@@ -3,7 +3,8 @@
 // No third party tools/Ai used to write this code
 // All rights reserved.
 // aleksandr7937937@gmail.com
-// PS open in fullscreen
+// You can copy/past this code on https://www.shadertoy.com/new   then press compile/play and it should work.
+// How it should look: https://youtu.be/fYOBpsAV_C0?si=uSKQasAALpHrUgop
 
 const float _MAXDIST = 30.0;
 
