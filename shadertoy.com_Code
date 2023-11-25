@@ -1,0 +1,259 @@
+// Written by 
+// Aleksandr Pogosov, ©2023
+// No third party tools/Ai used to write this code
+// All rights reserved.
+// aleksandr7937937@gmail.com
+// PS open in fullscreen
+
+const float _MAXDIST = 30.0;
+
+struct pInfo
+{
+	float sd;
+	vec3 col;
+};
+
+
+pInfo minSd(pInfo pOne, pInfo pTwo)
+{
+	if(pOne.sd <pTwo.sd) return pOne;
+	return pTwo;
+}
+
+
+vec2 rotate_Z(vec2 p, float angle)
+{
+	mat2 mat= mat2
+	(cos(angle), sin(angle),
+	-sin(angle), cos(angle));
+	return mat * p;
+}
+
+
+pInfo sky(vec2 p)
+{
+	pInfo sky;
+	sky.sd = 0.001;
+	p.y = 1.0-p.y;
+	float x = abs(p.x);
+	sky.col = vec3(
+		p.y+cos(x)+x,
+		p.y+x*(cos(iTime/3.)+1.99)/1.3,
+		p.y
+		)*0.95;
+	return sky;
+}
+
+
+pInfo star (vec2 p, vec3 col, float size)
+{
+	pInfo starInfo;
+	starInfo.sd =  length(p)-size;
+	starInfo.sd = step(0.01, starInfo.sd);
+	starInfo.col = col*vec3(p,p.x+p.y);
+	return starInfo;
+}
+
+
+pInfo stars(vec2 p)
+{
+	vec2 originalP = p;
+
+	float deductStars = length(originalP
+		-vec2(1.52,-0.4))-1.55;
+		deductStars*= length(originalP
+		-vec2(-1.52,-0.4))-1.55;
+	float cosT = (cos(iTime)+1.0)/2.0;
+	p*=5.9;
+	p = rotate_Z(p,iTime/25.0);
+
+	float s_1 = cos(abs(fract(p.x)-0.5));
+	float s_2 = cos(abs(fract(p.y)-0.5));
+	vec2 sPos = vec2(s_1+s_2);
+	pInfo star_All = star(sPos, vec3(0.3+(cosT*0.2),0.3+cosT,0.7),2.495);
+
+	p=originalP;
+	p*=2.0;
+	p = rotate_Z(p,iTime/24.8);
+	float s_3 = cos(abs(fract(p.x)-0.5));
+	float s_4 = cos(abs(fract(p.y)-0.5));
+	vec2 sPos_2 = vec2(s_3+s_4);
+	pInfo star_2 = star(sPos_2, vec3(0.4+(cosT*0.5),0.9+(cosT*2.0),0.4*cosT),2.49);
+	star_All = minSd(star_All,star_2);
+
+	p=originalP;
+	p*=2.5;
+	p = rotate_Z(p,iTime/24.5);
+	float s_5 = cos(abs(fract(p.x+2.0)-0.5));
+	float s_6 = cos(abs(fract(p.y+3.0)-0.5));
+	vec2 sPos_3 = vec2(s_5+s_6);
+	pInfo star_3 = star(sPos_3, vec3(0.0,0.3+(cosT*2.0),0.9),2.49);
+	star_All = minSd(star_All,star_3);
+
+	p=originalP;
+	p*=0.5;
+	p = rotate_Z(p,iTime/24.0);
+	float s_7 = cos(abs(fract(p.x+6.0)-0.5));
+	float s_8 = cos(abs(fract(p.y+8.0)-0.5));
+	vec2 sPos_4 = vec2(s_7+s_8);
+	pInfo star_4 = star(sPos_4, vec3(0.7,0.7,0.4+cosT),2.48);
+	star_All = minSd(star_All,star_4);
+
+	p=originalP;
+	p*=4.5;
+	p = rotate_Z(p,iTime/23.8);
+	float s_9 = cos(abs(fract(p.x+6.0)-0.5));
+	float s_10 = cos(abs(fract(p.y+8.0)-0.5));
+	vec2 sPos_5 = vec2(s_9+s_10);
+	pInfo star_5 = star(sPos_5, vec3(0.5+cosT*0.5,1.0,0.5+cosT*0.5),2.48);
+	star_All = minSd(star_All,star_5);
+
+	p=originalP;
+	p*=6.5;
+	p = rotate_Z(p,iTime/23.5);
+	float s_11 = cos(abs(fract(p.x+6.0)-0.5));
+	float s_12 = cos(abs(fract(p.y+8.0)-0.5));
+	vec2 sPos_6 = vec2(s_11+s_12);
+	pInfo star_6 = star(sPos_6, vec3(0.5+cosT*0.5,1.0,0.5+cosT*0.5),2.495);
+	star_All = minSd(star_All,star_6);
+
+	p=originalP;
+	p*=5.2;
+	p = rotate_Z(p,iTime/23.0);
+	float s_13 = cos(abs(fract(p.x+6.0)-0.5));
+	float s_14 = cos(abs(fract(p.y+8.0)-0.5));
+	vec2 sPos_7 = vec2(s_13+s_14);
+	pInfo star_7 = star(sPos_7, vec3(0.5+cosT*0.5,1.0,0.5+cosT*0.5),2.499);
+	star_All = minSd(star_All,star_7);
+
+	deductStars = clamp(deductStars,0.0,0.97);
+	star_All.sd = mix( 1.0,star_All.sd, deductStars);
+
+	return star_All;
+}
+
+
+pInfo sun(vec2 p)
+{
+	pInfo sun;
+	sun.sd = length(p- vec2(.0,0.0) )- 0.09;
+	sun.col = vec3(1.0,0.95,0.0);
+	return sun;
+}
+
+
+pInfo water(vec3 p)
+{
+	float waves_x = fract(p.x+0.2)-0.5;
+	waves_x = abs(waves_x);
+	waves_x = cos(waves_x);
+	float waves_z= fract(p.z-iTime*0.25)-0.5;
+	waves_z = abs(waves_z);
+	waves_z = sin(waves_z);
+	float waves = mod(waves_x+waves_z,2.0);
+
+	vec3 col;
+	col = vec3(0.0,0.4,1.2) ;
+	col*= (0.95+waves*0.7);
+  float cosTime = (cos(iTime)+1.)/4.0;
+	p.y =p.y+ (waves* 0.4)+0.5;
+	float water = p.y;
+	return pInfo(water,col);
+}
+
+
+pInfo scene(vec3 p)
+{
+	pInfo scene;
+	vec3 skyCol = vec3(0.3,0.75,0.5);
+	scene.col = skyCol;
+	scene.sd = 100.;
+  scene = minSd(water(p),scene);
+	return scene;
+}
+
+
+pInfo rayMarch(vec3 camPos, vec3 rayDir)
+{
+
+	int maxSteps = 100;
+	float curDist = 0.0;
+	pInfo ray;
+	for(int a = 0; a < maxSteps;a++)
+	{
+		ray= scene(camPos+rayDir* curDist);
+		curDist += ray.sd;
+
+		if(curDist > _MAXDIST || ray.sd<=0.0001)
+		{
+			break;
+		}
+	}
+	ray.sd = curDist;
+	return ray;
+}
+
+
+vec3 normals(vec3 ray)
+{
+
+	float epsilon = 0.5;
+	float x_1 = ray.x + epsilon;
+	float x_2 = ray.x - epsilon;
+	float y_1 = ray.y + epsilon;
+	float y_2 = ray.y - epsilon;
+	float z_1 = ray.z + epsilon;
+	float z_2 = ray.z - epsilon;
+
+	float final_X =
+		scene(vec3(x_1, ray.y, ray.z)).sd
+	- scene(vec3(x_2, ray.y, ray.z)).sd;
+	float final_Y =
+		scene(vec3(ray.x, y_1, ray.z)).sd
+	- scene(vec3(ray.x, y_2, ray.z)).sd;
+	float final_Z =
+		scene(vec3(ray.x, ray.y, z_1)).sd
+  - scene(vec3(ray.x, ray.y, z_2)).sd;
+
+	return vec3(final_X, final_Y, final_Z);
+}
+
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord )
+{
+	vec2 uv = fragCoord.xy/iResolution.xy;
+	uv.x *= iResolution.x/iResolution.y;
+    uv.x-=0.87;
+    uv.y-= 0.2;
+    uv *= 3.0;
+	vec3 col;
+
+	vec3 camPos= vec3(0.0,0.0,5.0);
+	vec3 rDir = normalize(vec3(uv,-1.0));
+	pInfo ray = rayMarch(camPos,rDir);
+
+	if(ray.sd > _MAXDIST)
+	{
+		pInfo finalSky;
+		finalSky= minSd(sun(uv), sky(uv));
+		pInfo stars = stars(uv);
+		col = mix( stars.col,finalSky.col,stars.sd);
+	}
+
+	else
+	{
+		rDir.x *=10.5;
+		vec3 normRay = camPos + rDir*ray.sd;
+		vec3 norm= normals(normRay);
+		vec3 lightPos = vec3(0.0, -1.0, 200.0);
+		norm.z -=0.;
+		norm.y +=42.;
+		vec3 lightDir = normalize(
+			normRay*-7.-lightPos);
+		float diffuseDot = dot(norm, lightDir);
+		vec3 lightCol =vec3(1.0,0.5,0.0)* diffuseDot;
+		col = mix(ray.col, lightCol,		diffuseDot*0.6);
+
+	}
+  fragColor = vec4(col,1.0);
+}
